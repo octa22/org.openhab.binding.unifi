@@ -1,0 +1,445 @@
+/**
+ * Copyright (c) 2010-2015, openHAB.org and others.
+ * <p>
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ */
+package org.openhab.binding.unifi.internal;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Map;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.openhab.binding.unifi.UnifiBindingProvider;
+
+import org.apache.commons.lang.StringUtils;
+import org.openhab.core.binding.AbstractActiveBinding;
+import org.openhab.core.binding.BindingConfig;
+import org.openhab.core.items.ItemNotFoundException;
+import org.openhab.core.items.ItemRegistry;
+import org.openhab.core.library.types.DecimalType;
+import org.openhab.core.library.types.OnOffType;
+import org.openhab.core.library.types.StringType;
+import org.openhab.core.types.Command;
+import org.openhab.core.types.State;
+import org.osgi.framework.BundleContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.*;
+
+
+/**
+ * Implement this class if you are going create an actively polling service
+ * like querying a Website/Device.
+ *
+ * @author Ondrej Pecta
+ * @since 1.9.0
+ */
+public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(UnifiBinding.class);
+    private static final String LED = "led";
+    private static final String BLINK = "blink";
+
+    /**
+     * The BundleContext. This is only valid when the bundle is ACTIVE. It is set in the activate()
+     * method and must not be accessed anymore once the deactivate() method was called or before activate()
+     * was called.
+     */
+    private BundleContext bundleContext;
+    private ItemRegistry itemRegistry;
+
+    /**
+     * the refresh interval which is used to poll values from the Unifi
+     * server (optional, defaults to 60000ms)
+     */
+    private long refreshInterval = 60000;
+    private String controllerIP = "192.168.2.100";
+    private String controllerPort = "18443";
+    private String username = "admin";
+    private String password = "ikebara";
+
+    private SSLContext sc;
+
+    //Gson parser
+    private JsonParser parser = new JsonParser();
+
+    public UnifiBinding() {
+    }
+
+    ArrayList<String> cookies = new ArrayList<>();
+
+    /**
+     * Called by the SCR to activate the component with its configuration read from CAS
+     *
+     * @param bundleContext BundleContext of the Bundle that defines this component
+     * @param configuration Configuration properties for this component obtained from the ConfigAdmin service
+     */
+    public void activate(final BundleContext bundleContext, final Map<String, Object> configuration) {
+        this.bundleContext = bundleContext;
+
+        // the configuration is guaranteed not to be null, because the component definition has the
+        // configuration-policy set to require. If set to 'optional' then the configuration may be null
+
+
+        // to override the default refresh interval one has to add a
+        // parameter to openhab.cfg like <bindingName>:refresh=<intervalInMs>
+        String refreshIntervalString = (String) configuration.get("refresh");
+        if (StringUtils.isNotBlank(refreshIntervalString)) {
+            refreshInterval = Long.parseLong(refreshIntervalString);
+        }
+
+        String controllerIPString = (String) configuration.get("controllerIP");
+        if (StringUtils.isNotBlank(controllerIPString)) {
+            controllerIP = controllerIPString;
+        }
+
+        String controllerPortString = (String) configuration.get("controllerPort");
+        if (StringUtils.isNotBlank(controllerPortString)) {
+            controllerPort = controllerPortString;
+        }
+
+        // read further config parameters here ...
+
+        try {
+            sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create all-trusting host name verifier
+            HostnameVerifier allHostsValid = new HostnameVerifier() {
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            };
+
+            // Install the all-trusting host verifier
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+        } catch (Exception e) {
+            logger.error("Cannot initialize SSL Context!" + e.toString());
+            setProperlyConfigured(false);
+            return;
+        }
+
+        login();
+        setProperlyConfigured(true);
+    }
+
+    private boolean login() {
+        String url = null;
+
+        try {
+            url = getControllerUrl("api/login");
+            String urlParameters = "{'username':'" + username + "','password':'" + password + "'}";
+            byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+
+            URL cookieUrl = new URL(url);
+            HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
+            connection.setDoOutput(true);
+            connection.setInstanceFollowRedirects(true);
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Referer", getControllerUrl("login"));
+            //connection.setRequestProperty("Accept-Language", "de-de");
+            //connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+            connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
+            connection.setUseCaches(false);
+
+            try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
+                wr.write(postData);
+            }
+
+            //get cookie
+            cookies.clear();
+            String headerName;
+            for (int i = 1; (headerName = connection.getHeaderFieldKey(i)) != null; i++) {
+                if (headerName.equals("Set-Cookie")) {
+                    cookies.add(connection.getHeaderField(i));
+                }
+            }
+
+            InputStream response = connection.getInputStream();
+            String line = readResponse(response);
+            logger.debug("Unifi response: " + line);
+            return checkResponse(line);
+        } catch (MalformedURLException e) {
+            logger.error("The URL '" + url + "' is malformed: " + e.toString());
+        } catch (Exception e) {
+            logger.error("Cannot get Ubiquiti Unifi login cookie: " + e.toString());
+        }
+        return false;
+    }
+
+    private boolean checkResponse(String line) {
+
+        JsonObject jobject = parser.parse(line).getAsJsonObject();
+        if (jobject != null) {
+            jobject = jobject.get("meta").getAsJsonObject();
+            return jobject.get("rc").getAsString().equals("ok");
+        } else {
+            return false;
+        }
+    }
+
+    TrustManager[] trustAllCerts = new TrustManager[]{
+            new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+
+                public void checkClientTrusted(
+                        java.security.cert.X509Certificate[] certs, String authType) {
+                }
+
+                public void checkServerTrusted(
+                        java.security.cert.X509Certificate[] certs, String authType) {
+                }
+            }
+    };
+
+    private String readResponse(InputStream response) throws Exception {
+        String line;
+        StringBuilder body = new StringBuilder();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(response));
+
+        while ((line = reader.readLine()) != null) {
+            body.append(line).append("\n");
+        }
+        line = body.toString();
+        logger.debug(line);
+        return line;
+    }
+
+    private String getControllerUrl(String site) {
+        return "https://" + controllerIP + ":" + controllerPort + "/" + site;
+    }
+
+    /**
+     * Called by the SCR when the configuration of a binding has been changed through the ConfigAdmin service.
+     *
+     * @param configuration Updated configuration properties
+     */
+    public void modified(final Map<String, Object> configuration) {
+        // update the internal configuration accordingly
+    }
+
+    /**
+     * Called by the SCR to deactivate the component when either the configuration is removed or
+     * mandatory references are no longer satisfied or the component has simply been stopped.
+     *
+     * @param reason Reason code for the deactivation:<br>
+     *               <ul>
+     *               <li> 0 – Unspecified
+     *               <li> 1 – The component was disabled
+     *               <li> 2 – A reference became unsatisfied
+     *               <li> 3 – A configuration was changed
+     *               <li> 4 – A configuration was deleted
+     *               <li> 5 – The component was disposed
+     *               <li> 6 – The bundle was stopped
+     *               </ul>
+     */
+    public void deactivate(final int reason) {
+        this.bundleContext = null;
+        // deallocate resources here that are no longer needed and
+        // should be reset when activating this binding again
+    }
+
+    public void setItemRegistry(ItemRegistry itemRegistry) {
+        this.itemRegistry = itemRegistry;
+    }
+
+    public void unsetItemRegistry(ItemRegistry itemRegistry) {
+        this.itemRegistry = null;
+    }
+
+    /**
+     * @{inheritDoc}
+     */
+    @Override
+    protected long getRefreshInterval() {
+        return refreshInterval;
+    }
+
+    /**
+     * @{inheritDoc}
+     */
+    @Override
+    protected String getName() {
+        return "Unifi Refresh Service";
+    }
+
+    /**
+     * @{inheritDoc}
+     */
+    @Override
+    protected void execute() {
+        // the frequently executed code (polling) goes here ...
+        logger.debug("execute() method is called!");
+        login();
+
+        for (final UnifiBindingProvider provider : providers) {
+            for (final String itemName : provider.getItemNames()) {
+                if (getUnifiType(itemName).equals(LED)) {
+                    String url = getControllerUrl("api/s/default/set/setting/mgmt");
+                    String response = sendToController(url, "");
+                    if (checkResponse(response)) {
+                        JsonObject jobject = parser.parse(response).getAsJsonObject();
+                        if (jobject != null) {
+                            JsonArray jarray = jobject.getAsJsonArray("data");
+                            jobject = jarray.get(0).getAsJsonObject();
+                            boolean enabled = jobject.get("led_enabled").getAsBoolean();
+                            State newVal = enabled ? OnOffType.ON : OnOffType.OFF;
+                            State oldVal;
+                            try {
+                                oldVal = itemRegistry.getItem(itemName).getState();
+                                if (!newVal.equals(oldVal))
+                                    eventPublisher.postUpdate(itemName, newVal);
+                            } catch (ItemNotFoundException e) {
+                                logger.error("Cannot find item " + itemName + " in item registry!");
+                            }
+                        }
+                        else
+                        {
+                            logger.error("Cannot parse JSON response!");
+                        }
+                    }
+                }
+
+            }
+        }
+
+    }
+
+    /**
+     * @{inheritDoc}
+     */
+    @Override
+    protected void internalReceiveCommand(String itemName, Command command) {
+        // the code being executed when a command was sent on the openHAB
+        // event bus goes here. This method is only called if one of the
+        // BindingProviders provide a binding for the given 'itemName'.
+        logger.debug("internalReceiveCommand({},{}) is called!", itemName, command);
+        UnifiGenericBindingProvider.UnifiBindingConfig config = getUnifiConfig(itemName);
+        if (config == null)
+            return;
+
+        String type = config.getType();
+        if (type.equals(LED)) {
+            switchLed(command.toString().equals("ON"));
+        } else
+            //
+            if (type.equals(BLINK)) {
+                //blinkLed("44:d9:e7:f9:51:b4", command.toString().equals("ON"));
+                blinkLed(config.getMAC(), command.toString().equals("ON"));
+            } else {
+                logger.error("Unknown Unifi type: " + type + " for item " + itemName);
+            }
+    }
+
+    private void blinkLed(String mac, boolean value) {
+        String url = getControllerUrl("api/s/default/cmd/devmgr");
+        String urlParameters = "json={'cmd':'" + (value ? "" : "un") + "set-locate', 'mac':'" + mac + "'}";
+        sendToController(url, urlParameters);
+    }
+
+    private void switchLed(boolean value) {
+        String url = getControllerUrl("api/s/default/set/setting/mgmt");
+        String urlParameters = "json={'led_enabled':" + value + "}";
+        sendToController(url, urlParameters);
+    }
+
+    private String sendToController(String url, String urlParameters) {
+        try {
+            byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+
+            URL cookieUrl = new URL(url);
+            HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
+            connection.setDoOutput(true);
+            connection.setInstanceFollowRedirects(true);
+            connection.setRequestMethod("POST");
+            //for(String cookie : cookies) {
+            connection.setRequestProperty("Cookie", cookies.get(0) + "; " + cookies.get(1));
+            //}
+
+            connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
+            connection.setUseCaches(false);
+
+            try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
+                wr.write(postData);
+            }
+            InputStream response = connection.getInputStream();
+            String line = readResponse(response);
+            if (!checkResponse(line)) {
+                logger.error("Unifi response: " + line);
+
+            }
+            return line;
+        } catch (MalformedURLException e) {
+            logger.error("The URL '" + url + "' is malformed: " + e.toString());
+        } catch (Exception e) {
+            logger.error("Cannot send data " + urlParameters + " to url " + url + ". Exception: " + e.toString());
+        }
+        return "";
+    }
+
+    private UnifiGenericBindingProvider.UnifiBindingConfig getUnifiConfig(String itemName) {
+        for (final UnifiBindingProvider provider : providers) {
+            for (final String name : provider.getItemNames()) {
+                if (itemName.equals(name)) {
+                    return (UnifiGenericBindingProvider.UnifiBindingConfig) provider.getItemConfig(itemName);
+                }
+            }
+        }
+        return null;
+    }
+
+
+    private String getUnifiType(String itemName) {
+        for (final UnifiBindingProvider provider : providers) {
+            for (final String name : provider.getItemNames()) {
+                if (itemName.equals(name)) {
+                    return provider.getItemType(itemName);
+                }
+            }
+        }
+        return "";
+    }
+
+/*
+    private String getUnifiMAC(String itemName) {
+        for (final UnifiBindingProvider provider : providers) {
+            for (final String name : provider.getItemNames()) {
+                if (itemName.equals(name)) {
+                    return provider.getItemMAC(itemName);
+                }
+            }
+        }
+        return "";
+    }*/
+
+    /**
+     * @{inheritDoc}
+     */
+    @Override
+    protected void internalReceiveUpdate(String itemName, State newState) {
+        // the code being executed when a state was sent on the openHAB
+        // event bus goes here. This method is only called if one of the
+        // BindingProviders provide a binding for the given 'itemName'.
+        logger.debug("internalReceiveUpdate({},{}) is called!", itemName, newState);
+    }
+
+}
