@@ -69,10 +69,10 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
      * server (optional, defaults to 60000ms)
      */
     private long refreshInterval = 60000;
-    private String controllerIP = "192.168.2.100";
-    private String controllerPort = "18443";
-    private String username = "admin";
-    private String password = "ikebara";
+    private String controllerIP = "";
+    private String controllerPort = "";
+    private String username = "";
+    private String password = "";
 
     private SSLContext sc;
 
@@ -112,6 +112,16 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
         String controllerPortString = (String) configuration.get("controllerPort");
         if (StringUtils.isNotBlank(controllerPortString)) {
             controllerPort = controllerPortString;
+        }
+
+        String usernameString = (String) configuration.get("username");
+        if (StringUtils.isNotBlank(usernameString)) {
+            username = usernameString;
+        }
+
+        String passwordString = (String) configuration.get("password");
+        if (StringUtils.isNotBlank(passwordString)) {
+            password = passwordString;
         }
 
         // read further config parameters here ...
@@ -154,8 +164,6 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
             connection.setInstanceFollowRedirects(true);
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Referer", getControllerUrl("login"));
-            //connection.setRequestProperty("Accept-Language", "de-de");
-            //connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
             connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
             connection.setUseCaches(false);
 
