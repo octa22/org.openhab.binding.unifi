@@ -15,24 +15,20 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Map;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.openhab.binding.unifi.UnifiBindingProvider;
 
 import org.apache.commons.lang.StringUtils;
 import org.openhab.core.binding.AbstractActiveBinding;
-import org.openhab.core.binding.BindingConfig;
 import org.openhab.core.items.ItemNotFoundException;
 import org.openhab.core.items.ItemRegistry;
-import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
-import org.openhab.core.library.types.StringType;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
 import org.osgi.framework.BundleContext;
@@ -54,7 +50,10 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
     private static final Logger logger =
             LoggerFactory.getLogger(UnifiBinding.class);
     private static final String LED = "led";
+    private static final String REBOOT = "reboot";
     private static final String BLINK = "blink";
+    private static final String DISABLE_AP = "disable_ap";
+    private static final String ENABLE_WLAN = "enable_wlan";
 
     /**
      * The BundleContext. This is only valid when the bundle is ACTIVE. It is set in the activate()
@@ -147,8 +146,55 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
         }
 
         login();
+        discoverAPs();
         setProperlyConfigured(true);
     }
+
+    private void enableWlan(String guestId, boolean enable) {
+        String url = getControllerUrl("api/s/default/rest/wlanconf/" + guestId);
+        String response = sendToController(url, "{'enabled': " + enable + "}", "PUT");
+        logger.debug(response);
+    }
+
+    private void discoverAPs() {
+        String url = getControllerUrl("api/s/default/stat/device");
+        String response = sendToController(url, "");
+        logger.debug(response);
+
+        JsonObject jobject = parser.parse(response).getAsJsonObject();
+        String res = jobject.get("meta").getAsJsonObject().get("rc").getAsString();
+        if (res.equals("ok")) {
+            JsonArray jarray = jobject.get("data").getAsJsonArray();
+            logger.info("Detected " + jarray.size() + " unifi APs");
+            for (JsonElement je : jarray) {
+                jobject = je.getAsJsonObject();
+                String _id = jobject.get("_id").getAsString();
+                String mac = jobject.get("mac").getAsString();
+                StringBuilder sb = new StringBuilder();
+                sb.append("Unifi AP with id: " + _id + " MAC: " + mac);
+                JsonArray vaparray = jobject.get("vap_table").getAsJsonArray();
+                sb.append(" has " + vaparray.size() + " wifi networks:");
+                for (JsonElement vapel : vaparray) {
+                    String name = vapel.getAsJsonObject().get("name").getAsString();
+                    String ssid = vapel.getAsJsonObject().get("essid").getAsString();
+                    String id = vapel.getAsJsonObject().get("id").getAsString();
+                    String radio = vapel.getAsJsonObject().get("radio").getAsString();
+
+                    boolean guest = vapel.getAsJsonObject().get("is_guest").getAsBoolean();
+                    sb.append("\n\t SSID: " + ssid);
+                    sb.append(" name: " + name);
+                    sb.append(" id: " + id);
+                    sb.append(" radio: " + radio);
+                    if (guest) {
+                        sb.append(" (GUEST)");
+                    }
+                }
+                logger.info(sb.toString());
+            }
+        }
+
+    }
+
 
     private boolean login() {
         String url = null;
@@ -194,11 +240,17 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
 
     private boolean checkResponse(String line) {
 
-        JsonObject jobject = parser.parse(line).getAsJsonObject();
-        if (jobject != null) {
-            jobject = jobject.get("meta").getAsJsonObject();
-            return jobject.get("rc").getAsString().equals("ok");
-        } else {
+        try {
+            JsonObject jobject = parser.parse(line).getAsJsonObject();
+            if (jobject != null) {
+                jobject = jobject.get("meta").getAsJsonObject();
+                return jobject.get("rc").getAsString().equals("ok");
+            } else {
+                return false;
+            }
+        }
+        catch(Exception ex)
+        {
             return false;
         }
     }
@@ -264,6 +316,24 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
         this.bundleContext = null;
         // deallocate resources here that are no longer needed and
         // should be reset when activating this binding again
+
+        logout();
+    }
+
+    private void logout() {
+        URL url = null;
+        try {
+            url = new URL(getControllerUrl("logout"));
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setInstanceFollowRedirects(true);
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Cookie", cookies.get(0) + "; " + cookies.get(1));
+            connection.getInputStream();
+        } catch (MalformedURLException e) {
+            logger.error("The URL '" + url + "' is malformed: " + e.toString());
+        } catch (Exception e) {
+            logger.error("Cannot do logout. Exception: " + e.toString());
+        }
     }
 
     public void setItemRegistry(ItemRegistry itemRegistry) {
@@ -319,9 +389,7 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
                             } catch (ItemNotFoundException e) {
                                 logger.error("Cannot find item " + itemName + " in item registry!");
                             }
-                        }
-                        else
-                        {
+                        } else {
                             logger.error("Cannot parse JSON response!");
                         }
                     }
@@ -346,16 +414,54 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
             return;
 
         String type = config.getType();
+        switch (type) {
+            case LED:
+                switchLed(command.equals(OnOffType.ON));
+                break;
+            case REBOOT:
+                if (command.equals(OnOffType.ON))
+                    rebootAP(config.getMAC());
+                break;
+            case BLINK:
+                blinkLed(config.getMAC(), command.equals(OnOffType.ON));
+                break;
+            case DISABLE_AP:
+                disableAP(config.getMAC(), command.equals(OnOffType.ON));
+                break;
+            case ENABLE_WLAN:
+                enableWlan(config.getMAC(), command.equals(OnOffType.ON));
+                break;
+            default:
+                logger.error("Unknown Unifi type: " + type + " for item " + itemName);
+        }
+
+        /*
         if (type.equals(LED)) {
             switchLed(command.toString().equals("ON"));
+        }
+        else if (type.equals(REBOOT)) {
+            if( command.toString().equals("ON") )
+                reboot(config.getMAC());
         } else
             //
             if (type.equals(BLINK)) {
-                //blinkLed("44:d9:e7:f9:51:b4", command.toString().equals("ON"));
                 blinkLed(config.getMAC(), command.toString().equals("ON"));
             } else {
                 logger.error("Unknown Unifi type: " + type + " for item " + itemName);
             }
+        */
+    }
+
+    private void disableAP(String id, boolean disable) {
+        String url = getControllerUrl("api/s/default/rest/device/" + id);
+        String urlParameters = "{'disabled':" + disable + "}";
+        sendToController(url, urlParameters, "PUT");
+    }
+
+    private void rebootAP(String mac) {
+        String url = getControllerUrl("api/s/default/cmd/devmgr");
+        String urlParameters = "json={'cmd':'restart', 'mac':'" + mac + "'}";
+        sendToController(url, urlParameters);
     }
 
     private void blinkLed(String mac, boolean value) {
@@ -371,6 +477,10 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
     }
 
     private String sendToController(String url, String urlParameters) {
+        return sendToController(url, urlParameters, "POST");
+    }
+
+    private String sendToController(String url, String urlParameters, String method) {
         try {
             byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
 
@@ -378,7 +488,7 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
             HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
             connection.setDoOutput(true);
             connection.setInstanceFollowRedirects(true);
-            connection.setRequestMethod("POST");
+            connection.setRequestMethod(method);
             //for(String cookie : cookies) {
             connection.setRequestProperty("Cookie", cookies.get(0) + "; " + cookies.get(1));
             //}
