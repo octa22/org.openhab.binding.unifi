@@ -192,9 +192,7 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
                 logger.info(sb.toString());
             }
         }
-
     }
-
 
     private boolean login() {
         String url = null;
@@ -248,9 +246,7 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
             } else {
                 return false;
             }
-        }
-        catch(Exception ex)
-        {
+        } catch (Exception ex) {
             return false;
         }
     }
@@ -371,30 +367,62 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
 
         for (final UnifiBindingProvider provider : providers) {
             for (final String itemName : provider.getItemNames()) {
-                if (getUnifiType(itemName).equals(LED)) {
-                    String url = getControllerUrl("api/s/default/set/setting/mgmt");
-                    String response = sendToController(url, "");
-                    if (checkResponse(response)) {
-                        JsonObject jobject = parser.parse(response).getAsJsonObject();
-                        if (jobject != null) {
-                            JsonArray jarray = jobject.getAsJsonArray("data");
-                            jobject = jarray.get(0).getAsJsonObject();
-                            boolean enabled = jobject.get("led_enabled").getAsBoolean();
-                            State newVal = enabled ? OnOffType.ON : OnOffType.OFF;
-                            State oldVal;
-                            try {
-                                oldVal = itemRegistry.getItem(itemName).getState();
-                                if (!newVal.equals(oldVal))
-                                    eventPublisher.postUpdate(itemName, newVal);
-                            } catch (ItemNotFoundException e) {
-                                logger.error("Cannot find item " + itemName + " in item registry!");
-                            }
-                        } else {
-                            logger.error("Cannot parse JSON response!");
-                        }
-                    }
+                if (provider.getItemType(itemName).equals(LED)) {
+                    readLedStatus(itemName);
                 }
+                if (provider.getItemType(itemName).equals(ENABLE_WLAN)) {
+                    readWlanStatus(itemName, provider.getItemMAC(itemName));
+                }
+            }
 
+        }
+    }
+
+    private void readWlanStatus(String itemName, String id) {
+        String url = getControllerUrl("api/s/default/rest/wlanconf/" + id);
+        String response = sendToController(url, "", "GET");
+        logger.debug(response);
+        if (checkResponse(response)) {
+            JsonObject jobject = parser.parse(response).getAsJsonObject();
+            if (jobject != null) {
+                JsonArray jarray = jobject.getAsJsonArray("data");
+                jobject = jarray.get(0).getAsJsonObject();
+                boolean enabled = jobject.get("enabled").getAsBoolean();
+                State newVal = enabled ? OnOffType.ON : OnOffType.OFF;
+                State oldVal;
+                try {
+                    oldVal = itemRegistry.getItem(itemName).getState();
+                    if (!newVal.equals(oldVal))
+                        eventPublisher.postUpdate(itemName, newVal);
+                } catch (ItemNotFoundException e) {
+                    logger.error("Cannot find item " + itemName + " in item registry!");
+                }
+            } else {
+                logger.error("Cannot parse JSON response!");
+            }
+        }
+    }
+
+    private void readLedStatus(String itemName) {
+        String url = getControllerUrl("api/s/default/set/setting/mgmt");
+        String response = sendToController(url, "");
+        if (checkResponse(response)) {
+            JsonObject jobject = parser.parse(response).getAsJsonObject();
+            if (jobject != null) {
+                JsonArray jarray = jobject.getAsJsonArray("data");
+                jobject = jarray.get(0).getAsJsonObject();
+                boolean enabled = jobject.get("led_enabled").getAsBoolean();
+                State newVal = enabled ? OnOffType.ON : OnOffType.OFF;
+                State oldVal;
+                try {
+                    oldVal = itemRegistry.getItem(itemName).getState();
+                    if (!newVal.equals(oldVal))
+                        eventPublisher.postUpdate(itemName, newVal);
+                } catch (ItemNotFoundException e) {
+                    logger.error("Cannot find item " + itemName + " in item registry!");
+                }
+            } else {
+                logger.error("Cannot parse JSON response!");
             }
         }
 
@@ -486,19 +514,23 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
 
             URL cookieUrl = new URL(url);
             HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
-            connection.setDoOutput(true);
+
             connection.setInstanceFollowRedirects(true);
             connection.setRequestMethod(method);
             //for(String cookie : cookies) {
             connection.setRequestProperty("Cookie", cookies.get(0) + "; " + cookies.get(1));
             //}
 
-            connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
-            connection.setUseCaches(false);
+            if( urlParameters.length() > 0) {
+                connection.setDoOutput(true);
+                connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
+                connection.setUseCaches(false);
 
-            try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
-                wr.write(postData);
+                try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
+                    wr.write(postData);
+                }
             }
+
             InputStream response = connection.getInputStream();
             String line = readResponse(response);
             if (!checkResponse(line)) {
@@ -524,30 +556,6 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
         }
         return null;
     }
-
-
-    private String getUnifiType(String itemName) {
-        for (final UnifiBindingProvider provider : providers) {
-            for (final String name : provider.getItemNames()) {
-                if (itemName.equals(name)) {
-                    return provider.getItemType(itemName);
-                }
-            }
-        }
-        return "";
-    }
-
-/*
-    private String getUnifiMAC(String itemName) {
-        for (final UnifiBindingProvider provider : providers) {
-            for (final String name : provider.getItemNames()) {
-                if (itemName.equals(name)) {
-                    return provider.getItemMAC(itemName);
-                }
-            }
-        }
-        return "";
-    }*/
 
     /**
      * @{inheritDoc}
