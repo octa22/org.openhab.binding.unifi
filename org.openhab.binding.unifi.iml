@@ -218,9 +218,9 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.config.core:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.config.core:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.config.core/0.9.0.201611191809/org.eclipse.smarthome.config.core-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.config.core/0.9.0.201612171108/org.eclipse.smarthome.config.core-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -254,9 +254,9 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core/0.9.0.201611191809/org.eclipse.smarthome.core-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core/0.9.0.201612171108/org.eclipse.smarthome.core-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -281,81 +281,81 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.audio:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.audio:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.audio/0.9.0.201611191809/org.eclipse.smarthome.core.audio-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.audio/0.9.0.201612171108/org.eclipse.smarthome.core.audio-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.io.console:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.io.console:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.io.console/0.9.0.201611191809/org.eclipse.smarthome.io.console-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.io.console/0.9.0.201612171108/org.eclipse.smarthome.io.console-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.autoupdate:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.autoupdate:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.autoupdate/0.9.0.201611191809/org.eclipse.smarthome.core.autoupdate-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.autoupdate/0.9.0.201612171108/org.eclipse.smarthome.core.autoupdate-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.persistence:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.persistence:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.persistence/0.9.0.201611191809/org.eclipse.smarthome.core.persistence-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.persistence/0.9.0.201612171108/org.eclipse.smarthome.core.persistence-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.scheduler:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.scheduler:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.scheduler/0.9.0.201611191809/org.eclipse.smarthome.core.scheduler-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.scheduler/0.9.0.201612171108/org.eclipse.smarthome.core.scheduler-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.scheduler:lib/quartz-2.2.1.jar:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.scheduler:lib/quartz-2.2.1.jar:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.eclipse.smarthome.core.scheduler-0.9.0.201611191809.jar/lib/quartz-2.2.1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.eclipse.smarthome.core.scheduler-0.9.0.201612171108.jar/lib/quartz-2.2.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.scheduler:lib/quartz-jobs-2.2.1.jar:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.scheduler:lib/quartz-jobs-2.2.1.jar:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.eclipse.smarthome.core.scheduler-0.9.0.201611191809.jar/lib/quartz-jobs-2.2.1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.eclipse.smarthome.core.scheduler-0.9.0.201612171108.jar/lib/quartz-jobs-2.2.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.transform:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.transform:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.transform/0.9.0.201611191809/org.eclipse.smarthome.core.transform-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.transform/0.9.0.201612171108/org.eclipse.smarthome.core.transform-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.voice:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.core.voice:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.voice/0.9.0.201611191809/org.eclipse.smarthome.core.voice-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.core.voice/0.9.0.201612171108/org.eclipse.smarthome.core.voice-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -371,9 +371,9 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.io.net:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.io.net:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.io.net/0.9.0.201611191809/org.eclipse.smarthome.io.net-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.io.net/0.9.0.201612171108/org.eclipse.smarthome.io.net-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -389,9 +389,9 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.core:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.core:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.model.core/0.9.0.201611191809/org.eclipse.smarthome.model.core-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.model.core/0.9.0.201612171108/org.eclipse.smarthome.model.core-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -416,9 +416,9 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.item:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.item:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.model.item/0.9.0.201611191809/org.eclipse.smarthome.model.item-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.model.item/0.9.0.201612171108/org.eclipse.smarthome.model.item-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -461,27 +461,27 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.persistence:lib/joda-time-2.9.2.jar:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.persistence:lib/joda-time-2.9.2.jar:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.eclipse.smarthome.model.persistence-0.9.0.201611191809.jar/lib/joda-time-2.9.2.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.eclipse.smarthome.model.persistence-0.9.0.201612171108.jar/lib/joda-time-2.9.2.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.persistence:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.persistence:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.model.persistence/0.9.0.201611191809/org.eclipse.smarthome.model.persistence-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.model.persistence/0.9.0.201612171108/org.eclipse.smarthome.model.persistence-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.script:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.script:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.model.script/0.9.0.201611191809/org.eclipse.smarthome.model.script-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.model.script/0.9.0.201612171108/org.eclipse.smarthome.model.script-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -497,27 +497,27 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.sitemap:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.model.sitemap:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.model.sitemap/0.9.0.201611191809/org.eclipse.smarthome.model.sitemap-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.model.sitemap/0.9.0.201612171108/org.eclipse.smarthome.model.sitemap-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.ui:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.ui:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.ui/0.9.0.201611191809/org.eclipse.smarthome.ui-0.9.0.201611191809.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.eclipse.smarthome.ui/0.9.0.201612171108/org.eclipse.smarthome.ui-0.9.0.201612171108.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.ui:lib/xchart-2.2.1.jar:0.9.0.201611191809">
+      <library name="Maven: p2.eclipse-plugin:org.eclipse.smarthome.ui:lib/xchart-2.2.1.jar:0.9.0.201612171108">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.eclipse.smarthome.ui-0.9.0.201611191809.jar/lib/xchart-2.2.1.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.eclipse.smarthome.ui-0.9.0.201612171108.jar/lib/xchart-2.2.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -542,27 +542,27 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.openhab.core.compat1x:2.0.0.201610120707">
+      <library name="Maven: p2.eclipse-plugin:org.openhab.core.compat1x:2.0.0.201612051711">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.openhab.core.compat1x/2.0.0.201610120707/org.openhab.core.compat1x-2.0.0.201610120707.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/p2/osgi/bundle/org.openhab.core.compat1x/2.0.0.201612051711/org.openhab.core.compat1x-2.0.0.201612051711.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.openhab.core.compat1x:lib/jackson-core-asl-1.9.2.jar:2.0.0.201610120707">
+      <library name="Maven: p2.eclipse-plugin:org.openhab.core.compat1x:lib/jackson-core-asl-1.9.2.jar:2.0.0.201612051711">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.openhab.core.compat1x-2.0.0.201610120707.jar/lib/jackson-core-asl-1.9.2.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.openhab.core.compat1x-2.0.0.201612051711.jar/lib/jackson-core-asl-1.9.2.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Maven: p2.eclipse-plugin:org.openhab.core.compat1x:lib/jackson-mapper-asl-1.9.2.jar:2.0.0.201610120707">
+      <library name="Maven: p2.eclipse-plugin:org.openhab.core.compat1x:lib/jackson-mapper-asl-1.9.2.jar:2.0.0.201612051711">
         <CLASSES>
-          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.openhab.core.compat1x-2.0.0.201610120707.jar/lib/jackson-mapper-asl-1.9.2.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/.cache/tycho/org.openhab.core.compat1x-2.0.0.201612051711.jar/lib/jackson-mapper-asl-1.9.2.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
