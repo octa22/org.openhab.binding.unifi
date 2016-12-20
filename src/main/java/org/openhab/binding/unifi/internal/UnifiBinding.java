@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -29,6 +30,7 @@ import org.openhab.core.binding.AbstractActiveBinding;
 import org.openhab.core.items.ItemNotFoundException;
 import org.openhab.core.items.ItemRegistry;
 import org.openhab.core.library.types.OnOffType;
+import org.openhab.core.library.types.StringType;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
 import org.osgi.framework.BundleContext;
@@ -54,6 +56,12 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
     private static final String BLINK = "blink";
     private static final String DISABLE_AP = "disable_ap";
     private static final String ENABLE_WLAN = "enable_wlan";
+    private static final String PASSWORD = "password";
+    private static final String CHANGE_PASSWORD = "change_password";
+
+    //generate password
+    static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    static SecureRandom rnd = new SecureRandom();
 
     /**
      * The BundleContext. This is only valid when the bundle is ACTIVE. It is set in the activate()
@@ -150,9 +158,15 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
         setProperlyConfigured(true);
     }
 
-    private void enableWlan(String guestId, boolean enable) {
-        String url = getControllerUrl("api/s/default/rest/wlanconf/" + guestId);
+    private void enableWlan(String wlanId, boolean enable) {
+        String url = getControllerUrl("api/s/default/rest/wlanconf/" + wlanId);
         String response = sendToController(url, "{'enabled': " + enable + "}", "PUT");
+        logger.debug(response);
+    }
+
+    private void changePassword(String wlanId, String newPassword) {
+        String url = getControllerUrl("api/s/default/rest/wlanconf/" + wlanId);
+        String response = sendToController(url, "{'x_passphrase': '" + newPassword + "'}", "PUT");
         logger.debug(response);
     }
 
@@ -371,7 +385,10 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
                     readLedStatus(itemName);
                 }
                 if (provider.getItemType(itemName).equals(ENABLE_WLAN)) {
-                    readWlanStatus(itemName, provider.getItemMAC(itemName));
+                    readWlanStatus(itemName, provider.getItemId(itemName));
+                }
+                if (provider.getItemType(itemName).equals(PASSWORD)) {
+                    readWlanPassword(itemName, provider.getItemId(itemName));
                 }
             }
 
@@ -389,6 +406,31 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
                 jobject = jarray.get(0).getAsJsonObject();
                 boolean enabled = jobject.get("enabled").getAsBoolean();
                 State newVal = enabled ? OnOffType.ON : OnOffType.OFF;
+                State oldVal;
+                try {
+                    oldVal = itemRegistry.getItem(itemName).getState();
+                    if (!newVal.equals(oldVal))
+                        eventPublisher.postUpdate(itemName, newVal);
+                } catch (ItemNotFoundException e) {
+                    logger.error("Cannot find item " + itemName + " in item registry!");
+                }
+            } else {
+                logger.error("Cannot parse JSON response!");
+            }
+        }
+    }
+
+    private void readWlanPassword(String itemName, String id) {
+        String url = getControllerUrl("api/s/default/rest/wlanconf/" + id);
+        String response = sendToController(url, "", "GET");
+        logger.debug(response);
+        if (checkResponse(response)) {
+            JsonObject jobject = parser.parse(response).getAsJsonObject();
+            if (jobject != null) {
+                JsonArray jarray = jobject.getAsJsonArray("data");
+                jobject = jarray.get(0).getAsJsonObject();
+                String password = jobject.get("x_passphrase").getAsString();
+                State newVal = new StringType(password);
                 State oldVal;
                 try {
                     oldVal = itemRegistry.getItem(itemName).getState();
@@ -448,16 +490,21 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
                 break;
             case REBOOT:
                 if (command.equals(OnOffType.ON))
-                    rebootAP(config.getMAC());
+                    rebootAP(config.getId());
                 break;
             case BLINK:
-                blinkLed(config.getMAC(), command.equals(OnOffType.ON));
+                blinkLed(config.getId(), command.equals(OnOffType.ON));
                 break;
             case DISABLE_AP:
-                disableAP(config.getMAC(), command.equals(OnOffType.ON));
+                disableAP(config.getId(), command.equals(OnOffType.ON));
                 break;
             case ENABLE_WLAN:
-                enableWlan(config.getMAC(), command.equals(OnOffType.ON));
+                enableWlan(config.getId(), command.equals(OnOffType.ON));
+                break;
+            case CHANGE_PASSWORD:
+                if (command.equals(OnOffType.ON)) {
+                    changePassword(config.getId(), generatePassword(10));
+                }
                 break;
             default:
                 logger.error("Unknown Unifi type: " + type + " for item " + itemName);
@@ -469,15 +516,22 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
         }
         else if (type.equals(REBOOT)) {
             if( command.toString().equals("ON") )
-                reboot(config.getMAC());
+                reboot(config.getId());
         } else
             //
             if (type.equals(BLINK)) {
-                blinkLed(config.getMAC(), command.toString().equals("ON"));
+                blinkLed(config.getId(), command.toString().equals("ON"));
             } else {
                 logger.error("Unknown Unifi type: " + type + " for item " + itemName);
             }
         */
+    }
+
+    private String generatePassword(int len) {
+        StringBuilder sb = new StringBuilder(len);
+        for (int i = 0; i < len; i++)
+            sb.append(AB.charAt(rnd.nextInt(AB.length())));
+        return sb.toString();
     }
 
     private void disableAP(String id, boolean disable) {
@@ -521,7 +575,7 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
             connection.setRequestProperty("Cookie", cookies.get(0) + "; " + cookies.get(1));
             //}
 
-            if( urlParameters.length() > 0) {
+            if (urlParameters.length() > 0) {
                 connection.setDoOutput(true);
                 connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
                 connection.setUseCaches(false);

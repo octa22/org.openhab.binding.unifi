@@ -11,8 +11,6 @@ package org.openhab.binding.unifi.internal;
 import org.openhab.binding.unifi.UnifiBindingProvider;
 import org.openhab.core.binding.BindingConfig;
 import org.openhab.core.items.Item;
-import org.openhab.core.library.items.DimmerItem;
-import org.openhab.core.library.items.SwitchItem;
 import org.openhab.model.item.binding.AbstractGenericBindingProvider;
 import org.openhab.model.item.binding.BindingConfigParseException;
 
@@ -68,9 +66,9 @@ public class UnifiGenericBindingProvider extends AbstractGenericBindingProvider 
 		return config != null ? (config.getType()) : null;
 	}
 
-	public String getItemMAC(String itemName) {
+	public String getItemId(String itemName) {
 		final UnifiBindingConfig config = (UnifiBindingConfig) this.bindingConfigs.get(itemName);
-		return config != null ? (config.getMAC()) : null;
+		return config != null ? (config.getId()) : null;
 	}
 
 	public BindingConfig getItemConfig(String itemName) {
@@ -87,23 +85,23 @@ public class UnifiGenericBindingProvider extends AbstractGenericBindingProvider 
 	class UnifiBindingConfig implements BindingConfig {
 		// put member fields here which holds the parsed values
 		private String type;
-		private String mac = "";
+		private String id = "";
 
 		public String getType() {
 			return type;
 		}
 
-		public String getMAC() {
-			return mac;
+		public String getId() {
+			return id;
 		}
 
 		UnifiBindingConfig(String type) {
 			this.type = type;
 		}
 
-		UnifiBindingConfig(String type, String mac) {
+		UnifiBindingConfig(String type, String id) {
 			this.type = type;
-			this.mac = mac;
+			this.id = id;
 		}
 	}
 	

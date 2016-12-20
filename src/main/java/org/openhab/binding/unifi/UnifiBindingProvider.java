@@ -18,6 +18,6 @@ import org.openhab.core.binding.BindingProvider;
 public interface UnifiBindingProvider extends BindingProvider {
 
     String getItemType(String itemType);
-    String getItemMAC(String itemType);
+    String getItemId(String itemType);
     BindingConfig getItemConfig(String itemType);
 }
