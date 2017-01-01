@@ -1,6 +1,17 @@
 # org.openhab.binding.unifi
-# initialization example (openhab.cfg)
+# build
+copy __org.openhab.binding.unifi__ directory to __binding__ directory of OpenHAB source code (https://github.com/openhab/openhab)
 
+build using maven (mvn clean install)
+
+# install
+copy __gson-2.3.1.jar__ to __addons__ directory of OpenHAB (search internet or download here: http://central.maven.org/maven2/com/google/code/gson/gson/2.3.1/gson-2.3.1.jar)
+
+copy target file __org.openhab.binding.unifi*.jar__ to __addons__ directory of OpenHAB distribution
+
+#usage
+
+# initialization example (openhab.cfg)
 ```
 2016-12-19 20:53:16.614 [INFO ] [.b.unifi.internal.UnifiBinding] - Detected 1 unifi APs
 2016-12-19 20:53:16.615 [INFO ] [.b.unifi.internal.UnifiBinding] - Unifi AP with id: 580002bf403176465b707736 MAC: 44:d9:e7:f9:51:b4 has 4 wifi networks:
