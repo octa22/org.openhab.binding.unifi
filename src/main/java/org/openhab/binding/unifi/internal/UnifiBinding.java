@@ -403,6 +403,10 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
             JsonObject jobject = parser.parse(response).getAsJsonObject();
             if (jobject != null) {
                 JsonArray jarray = jobject.getAsJsonArray("data");
+                if (jarray.size() == 0) {
+                    logger.error("Cannot read wlan status for id: " + id);
+                    return;
+                }
                 jobject = jarray.get(0).getAsJsonObject();
                 boolean enabled = jobject.get("enabled").getAsBoolean();
                 State newVal = enabled ? OnOffType.ON : OnOffType.OFF;
@@ -428,6 +432,10 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
             JsonObject jobject = parser.parse(response).getAsJsonObject();
             if (jobject != null) {
                 JsonArray jarray = jobject.getAsJsonArray("data");
+                if (jarray.size() == 0) {
+                    logger.error("Cannot read wlan password for id: " + id);
+                    return;
+                }
                 jobject = jarray.get(0).getAsJsonObject();
                 String password = jobject.get("x_passphrase").getAsString();
                 State newVal = new StringType(password);
@@ -448,10 +456,15 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
     private void readLedStatus(String itemName) {
         String url = getControllerUrl("api/s/default/set/setting/mgmt");
         String response = sendToController(url, "");
+        logger.debug(response);
         if (checkResponse(response)) {
             JsonObject jobject = parser.parse(response).getAsJsonObject();
             if (jobject != null) {
                 JsonArray jarray = jobject.getAsJsonArray("data");
+                if (jarray.size() == 0) {
+                    logger.error("Cannot read led status for item: " + itemName);
+                    return;
+                }
                 jobject = jarray.get(0).getAsJsonObject();
                 boolean enabled = jobject.get("led_enabled").getAsBoolean();
                 State newVal = enabled ? OnOffType.ON : OnOffType.OFF;
