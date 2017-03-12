@@ -8,24 +8,12 @@
  */
 package org.openhab.binding.unifi.internal;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Map;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.openhab.binding.unifi.UnifiBindingProvider;
-
 import org.apache.commons.lang.StringUtils;
+import org.openhab.binding.unifi.UnifiBindingProvider;
 import org.openhab.core.binding.AbstractActiveBinding;
 import org.openhab.core.items.ItemNotFoundException;
 import org.openhab.core.items.ItemRegistry;
@@ -38,6 +26,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Map;
 
 
 /**
@@ -90,6 +88,7 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
     }
 
     ArrayList<String> cookies = new ArrayList<>();
+    ArrayList<String> aps = new ArrayList<>();
 
     /**
      * Called by the SCR to activate the component with its configuration read from CAS
@@ -106,6 +105,32 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
 
         // to override the default refresh interval one has to add a
         // parameter to openhab.cfg like <bindingName>:refresh=<intervalInMs>
+        readConfiguration(configuration);
+
+        try {
+            sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Create all-trusting host name verifier
+            HostnameVerifier allHostsValid = new HostnameVerifier() {
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            };
+
+            // Install the all-trusting host verifier
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+        } catch (Exception e) {
+            logger.error("Cannot initialize SSL Context!" + e.toString());
+            setProperlyConfigured(false);
+            return;
+        }
+
+        setProperlyConfigured(true);
+    }
+
+    private void readConfiguration(Map<String, Object> configuration) {
         String refreshIntervalString = (String) configuration.get("refresh");
         if (StringUtils.isNotBlank(refreshIntervalString)) {
             refreshInterval = Long.parseLong(refreshIntervalString);
@@ -130,32 +155,6 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
         if (StringUtils.isNotBlank(passwordString)) {
             password = passwordString;
         }
-
-        // read further config parameters here ...
-
-        try {
-            sc = SSLContext.getInstance("SSL");
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-
-            // Create all-trusting host name verifier
-            HostnameVerifier allHostsValid = new HostnameVerifier() {
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            };
-
-            // Install the all-trusting host verifier
-            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-        } catch (Exception e) {
-            logger.error("Cannot initialize SSL Context!" + e.toString());
-            setProperlyConfigured(false);
-            return;
-        }
-
-        login();
-        discoverAPs();
-        setProperlyConfigured(true);
     }
 
     private void enableWlan(String wlanId, boolean enable) {
@@ -171,6 +170,7 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
     }
 
     private void discoverAPs() {
+        aps.clear();
         String url = getControllerUrl("api/s/default/stat/device");
         String response = sendToController(url, "");
         logger.debug(response);
@@ -202,6 +202,7 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
                     if (guest) {
                         sb.append(" (GUEST)");
                     }
+                    aps.add(id);
                 }
                 logger.info(sb.toString());
             }
@@ -332,6 +333,9 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
 
     private void logout() {
         URL url = null;
+        if (cookies.size() == 0)
+            return;
+
         try {
             url = new URL(getControllerUrl("logout"));
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
@@ -377,7 +381,14 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
     protected void execute() {
         // the frequently executed code (polling) goes here ...
         logger.debug("execute() method is called!");
+
+        if (!bindingsExist())
+            return;
+
         login();
+        if (aps.size() == 0) {
+            discoverAPs();
+        }
 
         for (final UnifiBindingProvider provider : providers) {
             for (final String itemName : provider.getItemNames()) {
