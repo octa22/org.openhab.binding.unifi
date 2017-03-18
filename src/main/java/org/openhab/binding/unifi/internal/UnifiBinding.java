@@ -173,6 +173,9 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
         aps.clear();
         String url = getControllerUrl("api/s/default/stat/device");
         String response = sendToController(url, "");
+
+        if (response.equals(""))
+            return;
         logger.debug(response);
 
         JsonObject jobject = parser.parse(response).getAsJsonObject();
