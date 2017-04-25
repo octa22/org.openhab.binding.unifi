@@ -246,6 +246,7 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
             String line = readResponse(response);
             logger.debug("Unifi response: " + line);
             return checkResponse(line);
+
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
         } catch (Exception e) {
@@ -332,6 +333,7 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
         // should be reset when activating this binding again
 
         logout();
+        cookies.clear();
     }
 
     private void logout() {
@@ -340,10 +342,10 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
             return;
 
         try {
-            url = new URL(getControllerUrl("logout"));
+            url = new URL(getControllerUrl("api/logout"));
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
             connection.setInstanceFollowRedirects(true);
-            connection.setRequestMethod("GET");
+            connection.setRequestMethod("POST");
             connection.setRequestProperty("Cookie", cookies.get(0) + "; " + cookies.get(1));
             connection.getInputStream();
         } catch (MalformedURLException e) {
@@ -388,7 +390,11 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
         if (!bindingsExist())
             return;
 
-        login();
+        synchronized (cookies) {
+            logout();
+            login();
+        }
+
         if (aps.size() == 0) {
             discoverAPs();
         }
@@ -591,34 +597,36 @@ public class UnifiBinding extends AbstractActiveBinding<UnifiBindingProvider> {
 
     private String sendToController(String url, String urlParameters, String method) {
         try {
-            byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+            synchronized (cookies) {
+                byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
 
-            URL cookieUrl = new URL(url);
-            HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
+                URL cookieUrl = new URL(url);
+                HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
 
-            connection.setInstanceFollowRedirects(true);
-            connection.setRequestMethod(method);
-            //for(String cookie : cookies) {
-            connection.setRequestProperty("Cookie", cookies.get(0) + "; " + cookies.get(1));
-            //}
+                connection.setInstanceFollowRedirects(true);
+                connection.setRequestMethod(method);
+                //for(String cookie : cookies) {
+                connection.setRequestProperty("Cookie", cookies.get(0) + "; " + cookies.get(1));
+                //}
 
-            if (urlParameters.length() > 0) {
-                connection.setDoOutput(true);
-                connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
-                connection.setUseCaches(false);
+                if (urlParameters.length() > 0) {
+                    connection.setDoOutput(true);
+                    connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
+                    connection.setUseCaches(false);
 
-                try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
-                    wr.write(postData);
+                    try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
+                        wr.write(postData);
+                    }
                 }
-            }
 
-            InputStream response = connection.getInputStream();
-            String line = readResponse(response);
-            if (!checkResponse(line)) {
-                logger.error("Unifi response: " + line);
+                InputStream response = connection.getInputStream();
+                String line = readResponse(response);
+                if (!checkResponse(line)) {
+                    logger.error("Unifi response: " + line);
 
+                }
+                return line;
             }
-            return line;
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
         } catch (Exception e) {
