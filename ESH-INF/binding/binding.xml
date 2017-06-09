@@ -28,6 +28,6 @@
         </parameter>
         <parameter name="controllerPort" type="integer" required="true">
             <label>Unifi controller port.</label>
-        </parameter
+        </parameter>
     </config-description>
 </binding:binding>
